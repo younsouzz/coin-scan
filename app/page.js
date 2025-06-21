@@ -13,10 +13,29 @@ async function fetchCoins() {
 
 export default function Home() {
   const [coins, setCoins] = useState([])
+  const [favorites, setFavorites] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("favorites")
+      return saved ? JSON.parse(saved) : []
+    }
+    return []
+  })
 
   useEffect(() => {
     fetchCoins().then(setCoins).catch(console.error)
   }, [])
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("favorites", JSON.stringify(favorites))
+    }
+  }, [favorites])
+
+  function toggleFavorite(id) {
+    setFavorites((prev) =>
+      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
+    )
+  }
 
   return (
     <main
@@ -45,34 +64,51 @@ export default function Home() {
       </h1>
 
       <ul style={{ listStyle: "none", padding: 0 }}>
-        {coins.map((coin) => (
-          <li
-            key={coin.id}
-            style={{
-              backgroundColor: "#121827",
-              margin: "16px 0",
-              borderRadius: 12,
-              padding: 16,
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-            }}
-          >
-            <Image
-              src={coin.image}
-              alt={coin.name}
-              width={40}
-              height={40}
-              style={{ borderRadius: "50%" }}
-            />
-            <div style={{ flex: 1 }}>
-              <strong>{coin.name}</strong> ({coin.symbol.toUpperCase()})
-            </div>
-            <div style={{ color: "#00FFFF", fontWeight: "bold" }}>
-              ${coin.current_price.toLocaleString()}
-            </div>
-          </li>
-        ))}
+        {coins.map((coin) => {
+          const isFav = favorites.includes(coin.id)
+          return (
+            <li
+              key={coin.id}
+              onClick={() => toggleFavorite(coin.id)}
+              style={{
+                backgroundColor: "#121827",
+                margin: "16px 0",
+                borderRadius: 12,
+                padding: 16,
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+                cursor: "pointer",
+                border: isFav ? "2px solid #00FFFF" : "2px solid transparent",
+                userSelect: "none",
+              }}
+              title={isFav ? "Remove from favorites" : "Add to favorites"}
+            >
+              <Image
+                src={coin.image}
+                alt={coin.name}
+                width={40}
+                height={40}
+                style={{ borderRadius: "50%" }}
+              />
+              <div style={{ flex: 1 }}>
+                <strong>{coin.name}</strong> ({coin.symbol.toUpperCase()})
+              </div>
+              <div style={{ color: "#00FFFF", fontWeight: "bold" }}>
+                ${coin.current_price.toLocaleString()}
+              </div>
+              <div
+                style={{
+                  color: isFav ? "#00FFFF" : "#555",
+                  fontSize: "1.5rem",
+                  marginLeft: 12,
+                }}
+              >
+                {isFav ? "★" : "☆"}
+              </div>
+            </li>
+          )
+        })}
       </ul>
     </main>
   )
