@@ -40,76 +40,108 @@ export default function Home() {
   return (
     <main
       style={{
-        padding: 24,
-        maxWidth: 800,
+        padding: "40px 20px",
+        maxWidth: 1000,
         margin: "0 auto",
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-        justifyContent: "flex-start",
         backgroundColor: "#0a0f1c",
+        minHeight: "100vh",
       }}
     >
       <h1
         style={{
           color: "#00FFFF",
           fontFamily: "Orbitron, sans-serif",
-          fontSize: "4rem",
+          fontSize: "3rem",
           textAlign: "center",
-          marginTop: 0,
-          marginBottom: 40,
+          marginBottom: "50px",
         }}
       >
         Coin Scan
       </h1>
 
-      <ul style={{ listStyle: "none", padding: 0 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+          gap: "24px",
+        }}
+      >
         {coins.map((coin) => {
           const isFav = favorites.includes(coin.id)
           return (
-            <li
+            <div
               key={coin.id}
               onClick={() => toggleFavorite(coin.id)}
               style={{
                 backgroundColor: "#121827",
-                margin: "16px 0",
-                borderRadius: 12,
-                padding: 16,
+                borderRadius: "12px",
+                padding: "20px",
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                gap: 16,
                 cursor: "pointer",
                 border: isFav ? "2px solid #00FFFF" : "2px solid transparent",
-                userSelect: "none",
+                transition: "all 0.2s ease",
+                boxShadow: "0 0 0 transparent",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = "0 0 15px rgba(0,255,255,0.3)"
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = "0 0 0 transparent"
               }}
               title={isFav ? "Remove from favorites" : "Add to favorites"}
             >
               <Image
                 src={coin.image}
                 alt={coin.name}
-                width={40}
-                height={40}
+                width={64}
+                height={64}
                 style={{ borderRadius: "50%" }}
               />
-              <div style={{ flex: 1 }}>
-                <strong>{coin.name}</strong> ({coin.symbol.toUpperCase()})
-              </div>
-              <div style={{ color: "#00FFFF", fontWeight: "bold" }}>
+              <h2
+                style={{
+                  color: "white",
+                  margin: "16px 0 4px",
+                  fontSize: "1.2rem",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                }}
+              >
+                {coin.name}
+              </h2>
+              <p
+                style={{
+                  color: "#888",
+                  marginBottom: "12px",
+                  textTransform: "uppercase",
+                  fontSize: "0.9rem",
+                }}
+              >
+                {coin.symbol}
+              </p>
+              <p
+                style={{
+                  color: "#00FFFF",
+                  fontWeight: "bold",
+                  fontSize: "1.2rem",
+                  marginBottom: "12px",
+                }}
+              >
                 ${coin.current_price.toLocaleString()}
-              </div>
+              </p>
               <div
                 style={{
-                  color: isFav ? "#00FFFF" : "#555",
-                  fontSize: "1.5rem",
-                  marginLeft: 12,
+                  fontSize: "2rem",
+                  color: isFav ? "#00FFFF" : "#333",
                 }}
               >
                 {isFav ? "★" : "☆"}
               </div>
-            </li>
+            </div>
           )
         })}
-      </ul>
+      </div>
     </main>
   )
 }
