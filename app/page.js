@@ -10,17 +10,18 @@ import {
   IconButton,
   SimpleGrid,
   Flex,
+  Input,
   useColorMode,
-  VStack,
 } from "@chakra-ui/react";
 import { StarIcon, SunIcon, MoonIcon } from "@chakra-ui/icons";
+import Link from "next/link";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
 export default function Home() {
   const [coins, setCoins] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [search, setSearch] = useState("");
   const toast = useToast();
   const { colorMode, toggleColorMode } = useColorMode();
 
@@ -40,10 +41,6 @@ export default function Home() {
           }
         );
         setCoins(res.data);
-
-        // Load existing favorites from localStorage
-        const storedFavorites = JSON.parse(localStorage.getItem("favorites")) || [];
-        setFavorites(storedFavorites);
       } catch (error) {
         console.error("Error fetching coins:", error);
       }
@@ -54,12 +51,8 @@ export default function Home() {
 
   const toggleFavorite = (coinId) => {
     let updatedFavorites;
-
-    const existing = favorites.find((fav) => fav.id === coinId);
-    const selectedCoin = coins.find((coin) => coin.id === coinId);
-
-    if (existing) {
-      updatedFavorites = favorites.filter((fav) => fav.id !== coinId);
+    if (favorites.includes(coinId)) {
+      updatedFavorites = favorites.filter((id) => id !== coinId);
       toast({
         title: "Removed from favorites",
         status: "info",
@@ -67,7 +60,7 @@ export default function Home() {
         isClosable: true,
       });
     } else {
-      updatedFavorites = [...favorites, selectedCoin];
+      updatedFavorites = [...favorites, coinId];
       toast({
         title: "Added to favorites",
         status: "success",
@@ -75,14 +68,13 @@ export default function Home() {
         isClosable: true,
       });
     }
-
     setFavorites(updatedFavorites);
-    localStorage.setItem("favorites", JSON.stringify(updatedFavorites));
   };
 
-  const isFavorite = (coinId) => {
-    return favorites.some((fav) => fav.id === coinId);
-  };
+  // Filtrer les coins en fonction de la recherche
+  const filteredCoins = coins.filter((coin) =>
+    coin.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <Box p={6}>
@@ -95,10 +87,10 @@ export default function Home() {
           Coin Scan
         </Heading>
 
-        <Flex gap={2}>
-          <Link href="/favorites">
+        <Flex align="center" gap={4}>
+          <Link href="/favorites" passHref>
             <Button colorScheme="electric" variant="outline">
-              ⭐ Favorites
+              Favorites
             </Button>
           </Link>
 
@@ -111,14 +103,23 @@ export default function Home() {
         </Flex>
       </Flex>
 
+      <Input
+        placeholder="Search coins..."
+        mb={6}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        bg={colorMode === "dark" ? "gray.700" : "gray.100"}
+        color={colorMode === "dark" ? "white" : "black"}
+      />
+
       <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={6}>
-        {coins.map((coin) => (
+        {filteredCoins.map((coin) => (
           <Box
             key={coin.id}
             borderWidth="1px"
             borderRadius="2xl"
             p={5}
-            bg={isFavorite(coin.id) ? "gray.700" : "gray.800"}
+            bg={favorites.includes(coin.id) ? "gray.700" : "gray.800"}
             boxShadow="xl"
             _hover={{ transform: "scale(1.02)" }}
             transition="all 0.3s"
@@ -132,8 +133,8 @@ export default function Home() {
               />
               <IconButton
                 icon={<StarIcon />}
-                colorScheme={isFavorite(coin.id) ? "yellow" : "gray"}
-                variant={isFavorite(coin.id) ? "solid" : "outline"}
+                colorScheme={favorites.includes(coin.id) ? "yellow" : "gray"}
+                variant={favorites.includes(coin.id) ? "solid" : "outline"}
                 onClick={() => toggleFavorite(coin.id)}
                 aria-label="Toggle Favorite"
               />
