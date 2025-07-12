@@ -17,9 +17,10 @@
     "@fontsource/orbitron": "^5.2.6",
     "axios": "^1.10.0",
     "framer-motion": "^6.5.1",
-    "next": "13.5.11",
+    "next": "^15.3.5",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-sparklines": "^1.7.0"
   },
   "devDependencies": {
     "eslint": "^8",
