@@ -1,147 +1,124 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import Image from "next/image"
-
-async function fetchCoins() {
-  const res = await fetch(
-    "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false"
-  )
-  if (!res.ok) throw new Error("Failed to fetch coins")
-  return res.json()
-}
+"use client";
+import {
+  Box,
+  Heading,
+  Text,
+  Image,
+  Button,
+  useToast,
+  IconButton,
+  SimpleGrid,
+  Flex,
+  useColorMode,
+} from "@chakra-ui/react";
+import { StarIcon, SunIcon, MoonIcon } from "@chakra-ui/icons";
+import axios from "axios";
+import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [coins, setCoins] = useState([])
-  const [favorites, setFavorites] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("favorites")
-      return saved ? JSON.parse(saved) : []
-    }
-    return []
-  })
+  const [coins, setCoins] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const toast = useToast();
+  const { colorMode, toggleColorMode } = useColorMode();
 
   useEffect(() => {
-    fetchCoins().then(setCoins).catch(console.error)
-  }, [])
+    const fetchCoins = async () => {
+      try {
+        const res = await axios.get(
+          "https://api.coingecko.com/api/v3/coins/markets",
+          {
+            params: {
+              vs_currency: "usd",
+              order: "market_cap_desc",
+              per_page: 10,
+              page: 1,
+              sparkline: false,
+            },
+          }
+        );
+        setCoins(res.data);
+      } catch (error) {
+        console.error("Error fetching coins:", error);
+      }
+    };
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("favorites", JSON.stringify(favorites))
+    fetchCoins();
+  }, []);
+
+  const toggleFavorite = (coinId) => {
+    let updatedFavorites;
+    if (favorites.includes(coinId)) {
+      updatedFavorites = favorites.filter((id) => id !== coinId);
+      toast({
+        title: "Removed from favorites",
+        status: "info",
+        duration: 2000,
+        isClosable: true,
+      });
+    } else {
+      updatedFavorites = [...favorites, coinId];
+      toast({
+        title: "Added to favorites",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
     }
-  }, [favorites])
-
-  function toggleFavorite(id) {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-    )
-  }
+    setFavorites(updatedFavorites);
+  };
 
   return (
-    <main
-      style={{
-        padding: "40px 20px",
-        maxWidth: 1000,
-        margin: "0 auto",
-        backgroundColor: "#0a0f1c",
-        minHeight: "100vh",
-      }}
-    >
-      <h1
-        style={{
-          color: "#00FFFF",
-          fontFamily: "Orbitron, sans-serif",
-          fontSize: "3rem",
-          textAlign: "center",
-          marginBottom: "50px",
-        }}
-      >
-        Coin Scan
-      </h1>
+    <Box p={6}>
+      <Flex justify="space-between" align="center" mb={6}>
+        <Heading
+          fontSize="4xl"
+          color="electric.500"
+          fontFamily="Orbitron, sans-serif"
+        >
+          Coin Scan
+        </Heading>
+        <IconButton
+          icon={colorMode === "dark" ? <SunIcon /> : <MoonIcon />}
+          onClick={toggleColorMode}
+          variant="outline"
+          aria-label="Toggle color mode"
+        />
+      </Flex>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: "24px",
-        }}
-      >
-        {coins.map((coin) => {
-          const isFav = favorites.includes(coin.id)
-          return (
-            <div
-              key={coin.id}
-              onClick={() => toggleFavorite(coin.id)}
-              style={{
-                backgroundColor: "#121827",
-                borderRadius: "12px",
-                padding: "20px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                cursor: "pointer",
-                border: isFav ? "2px solid #00FFFF" : "2px solid transparent",
-                transition: "all 0.2s ease",
-                boxShadow: "0 0 0 transparent",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = "0 0 15px rgba(0,255,255,0.3)"
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = "0 0 0 transparent"
-              }}
-              title={isFav ? "Remove from favorites" : "Add to favorites"}
-            >
+      <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={6}>
+        {coins.map((coin) => (
+          <Box
+            key={coin.id}
+            borderWidth="1px"
+            borderRadius="2xl"
+            p={5}
+            bg={favorites.includes(coin.id) ? "gray.700" : "gray.800"}
+            boxShadow="xl"
+            _hover={{ transform: "scale(1.02)" }}
+            transition="all 0.3s"
+          >
+            <Flex justify="space-between" align="center" mb={3}>
               <Image
                 src={coin.image}
                 alt={coin.name}
-                width={64}
-                height={64}
-                style={{ borderRadius: "50%" }}
+                boxSize="40px"
+                borderRadius="full"
               />
-              <h2
-                style={{
-                  color: "white",
-                  margin: "16px 0 4px",
-                  fontSize: "1.2rem",
-                  fontWeight: "bold",
-                  textAlign: "center",
-                }}
-              >
-                {coin.name}
-              </h2>
-              <p
-                style={{
-                  color: "#888",
-                  marginBottom: "12px",
-                  textTransform: "uppercase",
-                  fontSize: "0.9rem",
-                }}
-              >
-                {coin.symbol}
-              </p>
-              <p
-                style={{
-                  color: "#00FFFF",
-                  fontWeight: "bold",
-                  fontSize: "1.2rem",
-                  marginBottom: "12px",
-                }}
-              >
-                ${coin.current_price.toLocaleString()}
-              </p>
-              <div
-                style={{
-                  fontSize: "2rem",
-                  color: isFav ? "#00FFFF" : "#333",
-                }}
-              >
-                {isFav ? "★" : "☆"}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </main>
-  )
+              <IconButton
+                icon={<StarIcon />}
+                colorScheme={favorites.includes(coin.id) ? "yellow" : "gray"}
+                variant={favorites.includes(coin.id) ? "solid" : "outline"}
+                onClick={() => toggleFavorite(coin.id)}
+                aria-label="Toggle Favorite"
+              />
+            </Flex>
+            <Text fontSize="xl" fontWeight="bold" color="white">
+              {coin.name}
+            </Text>
+            <Text color="gray.300">${coin.current_price.toLocaleString()}</Text>
+          </Box>
+        ))}
+      </SimpleGrid>
+    </Box>
+  );
 }
